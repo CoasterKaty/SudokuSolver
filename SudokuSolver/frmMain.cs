@@ -379,6 +379,7 @@ namespace SudokuSolver
                 if (!bolChanges)
                 {
                     // If there's 3 cells in one group, e.g. 68 678 678 then eliminate these numbers from the rest of the group
+                    // Also e.g. 346 34 46
 
                     foreach (Control cControl in pnlSudoku.Controls) {
                         
@@ -391,63 +392,150 @@ namespace SudokuSolver
                                 foreach (TextBox tCell2 in cControl.Controls)
                                 {
                                     SudokuSquare ssCell2 = (SudokuSquare)tCell2.Tag;
-                                    if (ssCell2.PossibleValues.Count == 3 && tCell2.Handle != tCell.Handle && Enumerable.SequenceEqual(ssCell.PossibleValues, ssCell2.PossibleValues))
+                                    if ((tCell2.Handle != tCell.Handle) && ( (ssCell2.PossibleValues.Count == 3  && Enumerable.SequenceEqual(ssCell.PossibleValues, ssCell2.PossibleValues)) || (ssCell2.PossibleValues.Count == 2)))
                                     {
-                                        //Find a 3rd match or partial match
-                                        foreach (TextBox tCell3 in cControl.Controls)
+                                        bool bolMatch = false;
+                                        //Is it the same or partial?
+                                        if ((ssCell2.PossibleValues.Count == 3 && Enumerable.SequenceEqual(ssCell.PossibleValues, ssCell2.PossibleValues)))
                                         {
-                                            SudokuSquare ssCell3 = (SudokuSquare)tCell3.Tag;
-                                            if ((ssCell3.PossibleValues.Count == 3 || ssCell3.PossibleValues.Count == 2) && tCell3.Handle != tCell.Handle && tCell3.Handle != tCell2.Handle)
+                                            bolMatch = true;
+                                        }
+
+                                        if ((ssCell2.PossibleValues.Count == 2))
+                                        {
+                                            bolMatch = true;
+                                            //If it's partial, i.e. are 67 within 678
+                                            foreach (int Item in ssCell2.PossibleValues)
                                             {
-                                                bool bolMatch = false;
-                                                //Is it the same or partial?
-                                                if ((ssCell3.PossibleValues.Count == 3 && Enumerable.SequenceEqual(ssCell.PossibleValues, ssCell3.PossibleValues)))
+                                                if (!ssCell.PossibleValues.Contains(Item))
                                                 {
-                                                    bolMatch = true;
+                                                    bolMatch = false;
+                                                    break;
                                                 }
+                                            }
 
-                                                if ((ssCell3.PossibleValues.Count == 2))
+                                        }
+                                        if (bolMatch)
+                                        {
+                                            //Find a 3rd match or partial match
+                                            foreach (TextBox tCell3 in cControl.Controls)
+                                            {
+                                                SudokuSquare ssCell3 = (SudokuSquare)tCell3.Tag;
+                                                if ((ssCell3.PossibleValues.Count == 3 || ssCell3.PossibleValues.Count == 2) && tCell3.Handle != tCell.Handle && tCell3.Handle != tCell2.Handle)
                                                 {
-                                                    bolMatch = true;
-                                                    //If it's partial, i.e. are 67 within 678
-                                                    foreach (int Item in ssCell3.PossibleValues)
+                                                    bolMatch = false;
+                                                    //Is it the same or partial?
+                                                    if ((ssCell3.PossibleValues.Count == 3 && Enumerable.SequenceEqual(ssCell.PossibleValues, ssCell3.PossibleValues)))
                                                     {
-                                                        if (!ssCell.PossibleValues.Contains(Item))
-                                                        {
-                                                            bolMatch = false;
-                                                            break;
-                                                        }
+                                                        bolMatch = true;
                                                     }
-                                                    
-                                                }
-                                                    
-                                                if (bolMatch) 
-                                                {
-                                                    txtOutput.AppendText("Thing for " + string.Join("", ssCell.PossibleValues.ToArray()) + ", " + string.Join("", ssCell2.PossibleValues.ToArray()) + ", " + string.Join("", ssCell3.PossibleValues.ToArray()) + " has happened\r\n");
-                                                    //Exclude this from other cells in the group
-                                                    foreach (TextBox tCell4 in cControl.Controls)
+
+                                                    if ((ssCell3.PossibleValues.Count == 2))
                                                     {
-                                                        SudokuSquare ssCell4 = (SudokuSquare)tCell4.Tag;
-                                                        if (ssCell4.PossibleValues.Count > 1)
+                                                        bolMatch = true;
+                                                        //If it's partial, i.e. are 67 within 678
+                                                        foreach (int Item in ssCell3.PossibleValues)
                                                         {
-                                                            if (tCell4.Handle != tCell3.Handle && tCell4.Handle != tCell2.Handle && tCell4.Handle != tCell.Handle)
+                                                            if (!ssCell.PossibleValues.Contains(Item))
                                                             {
-                                                                foreach (int Item in ssCell.PossibleValues)
+                                                                bolMatch = false;
+                                                                break;
+                                                            }
+                                                        }
+
+                                                    }
+
+                                                    if (bolMatch)
+                                                    {
+                                                        txtOutput.AppendText("Thing for " + string.Join("", ssCell.PossibleValues.ToArray()) + ", " + string.Join("", ssCell2.PossibleValues.ToArray()) + ", " + string.Join("", ssCell3.PossibleValues.ToArray()) + " has happened\r\n");
+                                                        //Exclude this from other cells in the group
+                                                        foreach (TextBox tCell4 in cControl.Controls)
+                                                        {
+                                                            SudokuSquare ssCell4 = (SudokuSquare)tCell4.Tag;
+                                                            if (ssCell4.PossibleValues.Count > 1)
+                                                            {
+                                                                if (tCell4.Handle != tCell3.Handle && tCell4.Handle != tCell2.Handle && tCell4.Handle != tCell.Handle)
                                                                 {
-
-
-                                                                    if (ssCell4.PossibleValues.Contains(Item))
+                                                                    foreach (int Item in ssCell.PossibleValues)
                                                                     {
-                                                                        ssCell4.PossibleValues.Remove(Item);
-                                                                        tCell4.Text = string.Join("", ssCell4.PossibleValues.ToArray());
-                                                                        bolChanges = true;
-                                                                        Application.DoEvents();
+
+
+                                                                        if (ssCell4.PossibleValues.Contains(Item))
+                                                                        {
+                                                                            ssCell4.PossibleValues.Remove(Item);
+                                                                            tCell4.Text = string.Join("", ssCell4.PossibleValues.ToArray());
+                                                                            bolChanges = true;
+                                                                            Application.DoEvents();
+                                                                        }
                                                                     }
                                                                 }
                                                             }
                                                         }
+                                                       
+                                                        //If they are all on the same row or col, exclude for that row or col
+                                                        if ((ssCell.Row == ssCell2.Row) && (ssCell2.Row == ssCell3.Row)) {
+                                                            foreach (Control cControl2 in pnlSudoku.Controls) { 
+                                                                foreach (TextBox tCell4 in cControl2.Controls)
+                                                                {
+                                                                    SudokuSquare ssCell4 = (SudokuSquare)tCell4.Tag;
+                                                                    if (ssCell4.Row == ssCell.Row)
+                                                                    {
+                                                                        if (ssCell4.PossibleValues.Count > 1)
+                                                                        {
+                                                                            if (tCell4.Handle != tCell3.Handle && tCell4.Handle != tCell2.Handle && tCell4.Handle != tCell.Handle)
+                                                                            {
+                                                                                foreach (int Item in ssCell.PossibleValues)
+                                                                                {
+
+
+                                                                                    if (ssCell4.PossibleValues.Contains(Item))
+                                                                                    {
+                                                                                        ssCell4.PossibleValues.Remove(Item);
+                                                                                        tCell4.Text = string.Join("", ssCell4.PossibleValues.ToArray());
+                                                                                        bolChanges = true;
+                                                                                        Application.DoEvents();
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                        //repeat for col
+                                                        if ((ssCell.Col == ssCell2.Col) && (ssCell2.Col == ssCell3.Col))
+                                                        {
+                                                            foreach (Control cControl2 in pnlSudoku.Controls)
+                                                            {
+                                                                foreach (TextBox tCell4 in cControl2.Controls)
+                                                                {
+                                                                    SudokuSquare ssCell4 = (SudokuSquare)tCell4.Tag;
+                                                                    if (ssCell4.Col == ssCell.Col)
+                                                                    {
+                                                                        if (ssCell4.PossibleValues.Count > 1)
+                                                                        {
+                                                                            if (tCell4.Handle != tCell3.Handle && tCell4.Handle != tCell2.Handle && tCell4.Handle != tCell.Handle)
+                                                                            {
+                                                                                foreach (int Item in ssCell.PossibleValues)
+                                                                                {
+
+
+                                                                                    if (ssCell4.PossibleValues.Contains(Item))
+                                                                                    {
+                                                                                        ssCell4.PossibleValues.Remove(Item);
+                                                                                        tCell4.Text = string.Join("", ssCell4.PossibleValues.ToArray());
+                                                                                        bolChanges = true;
+                                                                                        Application.DoEvents();
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                        break;
                                                     }
-                                                    break;
                                                 }
                                             }
                                         }
