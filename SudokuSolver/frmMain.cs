@@ -765,6 +765,7 @@ namespace SudokuSolver
         private void btnReset_Click(object sender, EventArgs e)
         {
             txtOutput.Text = "";
+            lblCellsRemaining.Text = "81 cells remaining";
             foreach (Control cControl in pnlSudoku.Controls)
             {
                 foreach (TextBox tCell in cControl.Controls)
